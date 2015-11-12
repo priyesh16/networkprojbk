@@ -6,7 +6,6 @@ import subprocess
 from subprocess import call
 import re
 import matplotlib.pyplot as loopplt
-import matplotlib.pyplot as shareplt
 
 linesize=2000
 linescale=linesize/10
@@ -29,13 +28,23 @@ def main(filename):
         print (pos, max)
 
 def timevsloop(files):
-    outfile = "output.png"
+    looppng = "loopplot.png"
+    sharepng = "shareplot.png"
     colors = ['red', 'blue']
+    offsets = [0.02,0.08]
     maxlist = [0, 0]
 
+    loopplt.figure(1)
+    loopplt.xlabel("Loop Number * 2000")
+    loopplt.ylabel("Timestamps")
     loopplt.xlim([0, 10])
     loopplt.ylim([0, 1])
     
+    loopplt.figure(2)
+    loopplt.xlabel("CPU share")
+    loopplt.ylabel("Cumulative Distribution")
+    loopplt.xlim([0, 1])
+    loopplt.ylim([0, 1])
     for i in xrange(len(files)):
         filename = files[i]
         maxdata = 0;
@@ -43,12 +52,15 @@ def timevsloop(files):
             for line in f:
                 pass
             words = line.split()
-            maxlist[i] = int(words[i]) 
+            maxlist[i] = int(words[1]) 
+    print maxlist
 
 
     for i in xrange(len(files)):
+        j = 0;
         color = colors[i]
         filename = files[i]
+        offset = offsets[i]
         with open(filename, "r") as f:
             for line in f:
                 words = line.split()
@@ -58,18 +70,23 @@ def timevsloop(files):
                 x = loop/float(linescale)
                 y = timestamp/float(maxlist[i])
                 z = 1 - offtime/float(loop + 1)
-                loopplt.scatter(x, y, c=color, label=color, alpha=0.5)
-                shareplt.scatter(x, z, c=color, label=color, alpha=0.5)
-    loopplt.xlabel("Loop Number * 2000")
-    loopplt.ylabel("Timestamps")
+                if j == 0:
+                    print loop, timestamp, x, y
+                loopplt.figure(1)
+                loopplt.scatter(x , y - offset , c=color, label=color, alpha=0.5)
+                loopplt.figure(2)
+                loopplt.scatter(z, x, c=color, label=color, alpha=0.5)
+                j = j + 1;
+            print (timestamp, maxlist[i], y)
+    loopplt.figure(1)
     loopplt.grid(True)
-    loopplt.savefig(outfile)
+    loopplt.savefig(looppng)
+    loopplt.figure(2)
+    loopplt.grid(True)
+    loopplt.savefig(sharepng)
+    loopplt.grid(True)
     loopplt.show()
-    shareplt.xlabel("CPU Share")
-    shareplt.ylabel("Cumulative Distribution")
-    shareplt.grid(True)
-    shareplt.savefig(outfile)
-    shareplt.show()
+    
 
 if __name__ == "__main__":
     physfile = sys.argv[1]
