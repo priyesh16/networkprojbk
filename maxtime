@@ -5,7 +5,8 @@ import getopt
 import subprocess
 from subprocess import call
 import re
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as loopplt
+import matplotlib.pyplot as shareplt
 
 linesize=2000
 linescale=linesize/10
@@ -27,13 +28,13 @@ def main(filename):
                 prevline = curline 
         print (pos, max)
 
-def scatterplot(files):
+def timevsloop(files):
     outfile = "output.png"
     colors = ['red', 'blue']
     maxlist = [0, 0]
 
-    plt.xlim([0, 10])
-    plt.ylim([0, 1])
+    loopplt.xlim([0, 10])
+    loopplt.ylim([0, 1])
     
     for i in xrange(len(files)):
         filename = files[i]
@@ -51,18 +52,28 @@ def scatterplot(files):
         with open(filename, "r") as f:
             for line in f:
                 words = line.split()
-                x = int(words[0])/float(linescale)
-                y = int(words[1])/float(maxlist[i])
-                plt.scatter(x, y, c=color, label=color, alpha=0.5)
-    plt.xlabel("Loop Number * 2000")
-    plt.ylabel("Timestamps")
-    plt.grid(True)
-    plt.savefig(outfile)
-    plt.show()
+                loop = int(words[0])
+                timestamp = int(words[1])
+                offtime = int(words[2])
+                x = loop/float(linescale)
+                y = timestamp/float(maxlist[i])
+                z = 1 - offtime/float(loop + 1)
+                loopplt.scatter(x, y, c=color, label=color, alpha=0.5)
+                shareplt.scatter(x, z, c=color, label=color, alpha=0.5)
+    loopplt.xlabel("Loop Number * 2000")
+    loopplt.ylabel("Timestamps")
+    loopplt.grid(True)
+    loopplt.savefig(outfile)
+    loopplt.show()
+    shareplt.xlabel("CPU Share")
+    shareplt.ylabel("Cumulative Distribution")
+    shareplt.grid(True)
+    shareplt.savefig(outfile)
+    shareplt.show()
 
 if __name__ == "__main__":
     physfile = sys.argv[1]
     virtfile = sys.argv[2]
     files = [physfile, virtfile]
     main(files)
-    scatterplot(files)
+    timevsloop(files)
